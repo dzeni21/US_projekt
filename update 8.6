@@ -14,20 +14,22 @@ void IspisZaStepenBrojnikaINazivnika(bool T) { //Od T zavisi je li brojnik ili n
      BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
      BSP_LCD_SetBackColor(6591981);
      BSP_LCD_SetFont(&Font12);
-     BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Unesite stepen polinoma ", LEFT_MODE);
      
-     if(!T) BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"u brojniku: ", LEFT_MODE);
-     else BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"u nazivniku: ", LEFT_MODE);
+     if(!T) BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Stepen polinoma u brojniku ", LEFT_MODE);
+     else BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Stepen polinoma u nazivniku ", LEFT_MODE);
+     
+     BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"(unos potvrdite sa ENTER): ", LEFT_MODE);
+     
      
      crtajTastaturu();
 }
 
 
-int StepenBrojnikaIliNazivnika(bool T) {//stepen polinoma u brojniku ili nazivniku.
-    // Za T = 0 ide brojnik, a za T = 1 ide nazivnik.
+int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivniku.
+    // Za T = 0 se unosi brojnik, a za T = 1 se unosi nazivnik.
      IspisZaStepenBrojnikaINazivnika(T);
      char cifra[2];
-     int stepen = -1; //Magicna konstanta, stepen brojnika/nazivnika svakako nece biti negativan
+     int stepen = -1; //Magicna konstanta. Stepen brojnika/nazivnika svakako nece biti negativan.
      
      while(1) {
          BSP_TS_GetState(&TS_State);
@@ -45,7 +47,9 @@ int StepenBrojnikaIliNazivnika(bool T) {//stepen polinoma u brojniku ili nazivni
                 BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2 - 10, 85, (uint8_t *) cifra,LEFT_MODE);
             }
             
-            if(dajCifru(x1, y1) == 10 && stepen != -1) return stepen; //Ne radi nista ako je enter pritisnut prije unosa cifre
+            if(dajCifru(x1, y1) == 10 && stepen != -1) //Ne radi nista ako je enter pritisnut prije unosa cifre
+                return stepen;
+
             
         }
         
@@ -77,7 +81,6 @@ int StepenBrojnikaIliNazivnika(bool T) {//stepen polinoma u brojniku ili nazivni
      BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Unesite koeficijente", LEFT_MODE);
      BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"za polove: ", LEFT_MODE);
  }
- 
  void crtajTastaturu()
  {
      BSP_LCD_SetTextColor(LCD_COLOR_GRAY);
