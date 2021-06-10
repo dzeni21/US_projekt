@@ -1,9 +1,11 @@
 #include "mbed.h"
  #include "stm32f413h_discovery_ts.h"
  #include "stm32f413h_discovery_lcd.h"
+ #include <iostream>
+ #include <vector>
  
  TS_StateTypeDef TS_State = { 0 };
- double *nizNula = NULL, *nizPolova = NULL;
+ std::vector<double> nizNula, nizPolova;
  int StepenBrojnika, StepenNazivnika;
  
 int dajCifru(int x1, int y1);
@@ -183,9 +185,9 @@ int vratiStepen(int i)
     return 0;
 }
 
-double *koeficijenti(int T) //funkcija za unos koeficijenata -> vraca niz sa koeficijentima
+std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vraca niz sa koeficijentima
 {
-    double ret[5];
+    std::vector<double> ret;
     int unoseniBroj[3];
     int brojac = 0, i = 0, predznak = 1;
     int stepen = vratiStepen(T);
@@ -220,7 +222,7 @@ double *koeficijenti(int T) //funkcija za unos koeficijenata -> vraca niz sa koe
                 if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240) //unos -
                 {   
                     BSP_LCD_SetFont(&Font12);
-                    BSP_LCD_DisplayStringAt(70, 90, (uint8_t *)"-", LEFT_MODE);
+                    BSP_LCD_DisplayStringAt(70, 90, (uint8_t *)"-", LEFT_MODE);//ispisi minus na displej
                     
                     predznak = -1;
                     i--;
@@ -236,19 +238,21 @@ double *koeficijenti(int T) //funkcija za unos koeficijenata -> vraca niz sa koe
                     switch(i) { //Ispis cifre na predvidjeno mjesto
                         case 0: BSP_LCD_DisplayStringAt(85, 88, (uint8_t *)dega, LEFT_MODE); break;
                         case 1: BSP_LCD_DisplayStringAt(109, 88, (uint8_t *)dega, LEFT_MODE); break;
-                        case 2: BSP_LCD_DisplayStringAt(138, 90, (uint8_t *)dega, LEFT_MODE); break;
+                        case 2: BSP_LCD_DisplayStringAt(138, 90, (uint8_t *)dega, LEFT_MODE);
+                        wait_ms(50);
+                        break;
                             
-                          //  wait_ms(50); //Privremeno, dok ne ubacimo potvrdu sa ENTER
+                             //Privremeno, dok ne ubacimo potvrdu sa ENTER
                     }
                     
                 }
                 i++;
-                
             }
         }
-        printf("Predznak: %d\n", predznak);
+    
         coef = dajBroj(unoseniBroj);
-        ret[brojac] = coef * predznak;
+        //ret[brojac] = coef * predznak;
+        ret.push_back(coef * predznak);
          printf("%.1f\n", ret[brojac]);
          
         
