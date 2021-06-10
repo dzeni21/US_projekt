@@ -1,12 +1,17 @@
 #include "mbed.h"
  #include "stm32f413h_discovery_ts.h"
  #include "stm32f413h_discovery_lcd.h"
-
+ 
  TS_StateTypeDef TS_State = { 0 };
-
+ double *nizNula = NULL, *nizPolova = NULL;
+ int StepenBrojnika, StepenNazivnika;
+ 
 int dajCifru(int x1, int y1);
 void crtajTastaturu();
- 
+void ispisNuleTekst();
+void ispisPoloviTekst();
+
+
 void IspisZaStepenBrojnikaINazivnika(bool T) { //Od T zavisi je li brojnik ili nazivnik.
      BSP_LCD_Clear(LCD_COLOR_WHITE);
      BSP_LCD_SetTextColor(6591981);
@@ -14,49 +19,60 @@ void IspisZaStepenBrojnikaINazivnika(bool T) { //Od T zavisi je li brojnik ili n
      BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
      BSP_LCD_SetBackColor(6591981);
      BSP_LCD_SetFont(&Font12);
-     
      if(!T) BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Stepen polinoma u brojniku ", LEFT_MODE);
      else BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Stepen polinoma u nazivniku ", LEFT_MODE);
-     
      BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"(unos potvrdite sa ENTER): ", LEFT_MODE);
-     
-     
+     BSP_LCD_DrawRect(BSP_LCD_GetXSize()/2 - 12, 80, 19, 29);
      crtajTastaturu();
+     
+     
 }
 
+void CrtajOkvirove(bool T) { //Crta okvir, tacnije mjesta predvidjena za cifre
+    int a = 80;
+    BSP_LCD_Clear(LCD_COLOR_WHITE);
+    if(!T) ispisNuleTekst();
+    else ispisPoloviTekst();
+    crtajTastaturu();
+    BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetFont(&Font12);
+    BSP_LCD_DisplayStringAt(a + 7, 90, (uint8_t *)"-", LEFT_MODE);
+    BSP_LCD_DisplayStringAt(a + 31, 90, (uint8_t *)"-", LEFT_MODE);
+    BSP_LCD_DisplayStringAt(a + 60, 90, (uint8_t *)"-", LEFT_MODE);
+   // BSP_LCD_DrawRect(a - 24, 91, 19, 9);
+    BSP_LCD_DrawRect(a, 80, 19, 29);
+    BSP_LCD_DrawRect(a + 24, 80, 19, 29);
+    BSP_LCD_FillCircle(a + 48, 106, 2);
+    BSP_LCD_DrawRect(a + 53, 80, 19, 29);
+    
+}
 
 int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivniku.
     // Za T = 0 se unosi brojnik, a za T = 1 se unosi nazivnik.
      IspisZaStepenBrojnikaINazivnika(T);
      char cifra[2];
      int stepen = -1; //Magicna konstanta. Stepen brojnika/nazivnika svakako nece biti negativan.
-     
      while(1) {
          BSP_TS_GetState(&TS_State);
-         
          if(TS_State.touchDetected) {
-            
             uint16_t x1 = TS_State.touchX[0];
+            wait_ms(200);
             uint16_t y1 = TS_State.touchY[0];
-            
-            
+            wait_ms(200);
             if(dajCifru(x1, y1) >= 0 && dajCifru(x1, y1) <= 5) { //Stepen pripada [0, 5]
                 stepen = dajCifru(x1, y1);
                 cifra[0] = stepen + 48;
                 BSP_LCD_SetFont(&Font24);
+                BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
                 BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2 - 10, 85, (uint8_t *) cifra,LEFT_MODE);
             }
-            
             if(dajCifru(x1, y1) == 10 && stepen != -1) //Ne radi nista ako je enter pritisnut prije unosa cifre
                 return stepen;
-
-            
         }
-        
          wait_ms(100);
      }
-
 }
+
 
  void ispisNuleTekst()//unesite koeficijente za nule
  {
@@ -69,7 +85,6 @@ int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivni
      BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Unesite koeficijente", LEFT_MODE);
      BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"za nule: ", LEFT_MODE);
      crtajTastaturu();
-
  }
  void ispisPoloviTekst()//unesite koeficijente za polove
  {
@@ -97,7 +112,6 @@ int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivni
      BSP_LCD_DisplayStringAt(101, 158, (uint8_t *)"3", LEFT_MODE);
      BSP_LCD_FillRect(125,155,25,25);
      BSP_LCD_DisplayStringAt(132, 158, (uint8_t *)"4", LEFT_MODE);
-
      BSP_LCD_FillRect(5,185,25,25);
      BSP_LCD_DisplayStringAt(11, 189, (uint8_t *)"5", LEFT_MODE);
      BSP_LCD_FillRect(35,185,25,25);
@@ -108,20 +122,15 @@ int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivni
      BSP_LCD_DisplayStringAt(101, 189, (uint8_t *)"8", LEFT_MODE);
      BSP_LCD_FillRect(125,185,25,25);
      BSP_LCD_DisplayStringAt(131, 189, (uint8_t *)"9", LEFT_MODE);
-
      BSP_LCD_FillRect(5,215,25,25);
      BSP_LCD_DisplayStringAt(11,217, (uint8_t *)"-", LEFT_MODE);
-
      BSP_LCD_FillRect(35,215,200,20);
      BSP_LCD_DisplayStringAt(30,217, (uint8_t *)"SPACE", CENTER_MODE);
-
      BSP_LCD_FillRect(155,155,80,25);
      BSP_LCD_DisplayStringAt(167,160, (uint8_t *)"ENTER", LEFT_MODE);
      BSP_LCD_FillRect(155,185,80,25);
      BSP_LCD_DisplayStringAt(167,190, (uint8_t *)"BRISI", LEFT_MODE);
-
  }
-
  int dajCifru(int x1, int y1)
  {
      int broj;
@@ -154,60 +163,129 @@ int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivni
          if(y1 >= 155 && y1 <= 180) return 10; //ENTER je 10
          if(y1 >= 185 && y1 <= 210) return 11; //BRISI je 11
      }
-     
      return broj;
  }
+ 
+ double dajBroj(int digit[]) //unos max 3 cifre, u formatu _ _._
+{
+    double ret;
+    ret = digit[0] * 10 + digit[1] + digit[2] * 0.1;
+    return ret;
+}
 
- int nizNula[5];
- int nizPolova[5];
- int brojac = 0, predznak = 1;
- int coef;
+int vratiStepen(int i)
+{
+    switch(i)
+    {
+        case 0: return StepenBrojnika;
+        case 1: return StepenNazivnika;
+    }
+    return 0;
+}
+
+double *koeficijenti(int T) //funkcija za unos koeficijenata -> vraca niz sa koeficijentima
+{
+    double ret[5];
+    int unoseniBroj[3];
+    int brojac = 0, i = 0, predznak = 1;
+    int stepen = vratiStepen(T);
+    double coef;
+    BSP_TS_GetState(&TS_State);
+    while (brojac < stepen) 
+    {
+        
+        CrtajOkvirove(T);
+        BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+        BSP_LCD_SetFont(&Font12);
+        if(brojac == 0) BSP_LCD_DisplayStringAt(0, 45, (uint8_t *)"Slobodni koeficijent: ", LEFT_MODE);
+        else {
+            char potencija[2] = {brojac + 48};
+            BSP_LCD_DisplayStringAt(0, 45, (uint8_t *)"Koeficijent uz s :       ", LEFT_MODE);
+            BSP_LCD_SetFont(&Font8);
+            BSP_LCD_DisplayStringAt(114, 42, (uint8_t *)potencija, LEFT_MODE);
+        }
+        
+        BSP_TS_GetState(&TS_State);
+        i = 0;
+        while(i < 3)
+        {
+            
+            BSP_TS_GetState(&TS_State);
+            if(TS_State.touchDetected)
+            {
+                uint16_t x1 = TS_State.touchX[0];
+                wait_ms(200);
+                uint16_t y1 = TS_State.touchY[0];
+                wait_ms(200);
+                if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240) //unos -
+                {   
+                    BSP_LCD_SetFont(&Font12);
+                    BSP_LCD_DisplayStringAt(70, 90, (uint8_t *)"-", LEFT_MODE);
+                    
+                    predznak = -1;
+                    i--;
+                }
+                else
+                {
+                    int cifra = dajCifru(x1, y1);
+                    unoseniBroj[i] = cifra;
+                    
+                    char dega[2] = {cifra + 48};
+                    
+                    BSP_LCD_SetFont(&Font16);
+                    switch(i) { //Ispis cifre na predvidjeno mjesto
+                        case 0: BSP_LCD_DisplayStringAt(85, 88, (uint8_t *)dega, LEFT_MODE); break;
+                        case 1: BSP_LCD_DisplayStringAt(109, 88, (uint8_t *)dega, LEFT_MODE); break;
+                        case 2: BSP_LCD_DisplayStringAt(138, 90, (uint8_t *)dega, LEFT_MODE); break;
+                            
+                          //  wait_ms(50); //Privremeno, dok ne ubacimo potvrdu sa ENTER
+                    }
+                    
+                }
+                i++;
+                
+            }
+        }
+        printf("Predznak: %d\n", predznak);
+        coef = dajBroj(unoseniBroj);
+        ret[brojac] = coef * predznak;
+         printf("%.1f\n", ret[brojac]);
+         
+        
+        predznak = 1;
+        brojac++;
+    }
+    printf("\n");
+    for(int i = 0; i < stepen; i++)
+        printf("%.1f\n", ret[i]);
+    return ret;
+}
+
 
  int main()
  {
-
      BSP_LCD_Init();
-
+     //
      /* inicijalizacija ekrana */
      if (BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize()) == TS_ERROR) {
          printf("BSP_TS_Init error\\n");}
-
      /* brisi ekran */
      BSP_LCD_Clear(LCD_COLOR_WHITE);
-     
-     int StepenBrojnika, StepenNazivnika;
-     
      StepenBrojnika = StepenBrojnikaIliNazivnika(0);
      StepenNazivnika = StepenBrojnikaIliNazivnika(1);
-     
      ispisNuleTekst();
      crtajTastaturu();
-
-     while(1)
-     {
-         while (brojac < 5)
-         {
-             BSP_TS_GetState(&TS_State);//vraca poziciju touch screen-a
-             if(TS_State.touchDetected)
-             {
-                 uint16_t x1 = TS_State.touchX[0];
-                 wait_ms(200);
-                 uint16_t y1 = TS_State.touchY[0];
-                 //printf("%d\n", y1);
-                 if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240)
-                     predznak = -1;
-                 else
-                 {
-                     coef = dajCifru(x1, y1);
-                     nizNula[brojac] = coef * predznak;
-                     predznak = 1;
-                     printf("%d\n", nizNula[brojac]);
-                     brojac++;
-                 }
-             }
-         }
-         brojac = 0;
-         printf("Ponovo\n");
-         wait(1);
-     }
+     nizNula = koeficijenti(0);
+     ispisPoloviTekst();
+     nizPolova = koeficijenti(1);
+     
+     //Ne ispisuje niz kako treba, izostavlja koeficijente
+     printf("Koeficijenti brojnika: \n");
+     for(int i = 0; i < StepenBrojnika; i++)
+        printf("%.1f\n", nizNula[i]);
+     printf("Koeficijenti nazivnika: \n");
+     for(int i = 0; i < StepenNazivnika; i++)
+        printf("%.1f\n", nizPolova[i]);
+    printf("\n\n\n\n\n\n\n\n\n");
+     wait(1);
  }
