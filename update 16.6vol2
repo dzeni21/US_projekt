@@ -1,4 +1,4 @@
-#include "mbed.h"
+ #include "mbed.h"
  #include "stm32f413h_discovery_ts.h"
  #include "stm32f413h_discovery_lcd.h"
  #include <vector>
@@ -271,15 +271,15 @@ std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vrac
                     else if(cifra >= 0 && cifra <= 9)
                     {
                         unoseniBroj[i] = cifra;
-                        char dega[2] = {cifra + 48};
+                        char num[2] = {cifra + 48};
                         
                         BSP_LCD_SetFont(&Font16);
                         switch(i) { //Ispis cifre na predvidjeno mjesto
-                            case 0: BSP_LCD_DisplayStringAt(85, 103, (uint8_t *)dega, LEFT_MODE); 
+                            case 0: BSP_LCD_DisplayStringAt(85, 103, (uint8_t *)num, LEFT_MODE); 
                                 break;
-                            case 1: BSP_LCD_DisplayStringAt(109, 103, (uint8_t *)dega, LEFT_MODE); 
+                            case 1: BSP_LCD_DisplayStringAt(109, 103, (uint8_t *)num, LEFT_MODE); 
                                 break;
-                            case 2: BSP_LCD_DisplayStringAt(138, 103, (uint8_t *)dega, LEFT_MODE); 
+                            case 2: BSP_LCD_DisplayStringAt(138, 103, (uint8_t *)num, LEFT_MODE); 
                                 break;
                         }
                         i++;
@@ -304,22 +304,30 @@ std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vrac
     return ret;
 }
 
-void BrojUString(char* broj, double koji) {
-    if(koji < 0) {
+void BrojUString(char* broj, double num) {
+    if(num < 0) {
         broj[0] = '-';
-        koji *= -1;
+        num *= -1;
     }
     else broj[0] = '+';
-    if(koji > 9.9) {
-        broj[1] = int(koji/10) + '0'; koji -= int(koji/10)*10;
-        broj[2] = int(koji) + '0'; broj[3] = '.'; broj[4] = int( (koji - int(koji)) * 10) + '0';
+    printf("Broj: %.2f\n", num);
+    int pomocnibroj = num*10;
+    int decimala = pomocnibroj%10;
+    
+  
+    if(num > 9.9) {
+        broj[1] = int(num/10) + '0'; num -= int(num/10)*10;
+        broj[2] = int(num) + '0'; broj[3] = '.'; broj[4] = decimala + '0';
         broj[5] = '\0'; 
-    } else if(koji < 1) {
-        broj[1] = '0'; broj[2] = '.'; broj[3] = int(koji*10) + '0'; broj[5] = '\0';
-        broj[4] = '0';
+    } else if(num < 1) {
+        broj[1] = '0'; broj[2] = '.'; 
+        broj[3] = decimala + '0';
+        broj[4] = '0'; 
+        broj[5] = '\0';
     } else {
-        broj[1] = int(koji) + '0'; broj[2] = '.'; broj[3] = int( (koji - int(koji)) * 10) + '0';
-        broj[4] = '0'; broj[5] = '\0';
+        broj[1] = int(num) + '0'; broj[2] = '.'; 
+        broj[3] = decimala + '0';
+        broj[4] = '0'; broj[5] = '\0'; 
     }
 }
 
