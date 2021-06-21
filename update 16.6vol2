@@ -2,6 +2,18 @@
  #include "stm32f413h_discovery_ts.h"
  #include "stm32f413h_discovery_lcd.h"
  #include <vector>
+ #include "easy-connect.h"
+ #include "MQTTNetwork.h"
+ #include "MQTTmbed.h"
+ #include "MQTTClient.h"
+ #include <string.h>
+
+ #define MQTTCLIENT_QOS2 0
+ 
+int arrivedcount = 0;
+
+
+char* str;
  
  TS_StateTypeDef TS_State = { 0 };
  std::vector<double> nizNula, nizPolova;
