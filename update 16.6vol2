@@ -454,6 +454,65 @@ int OdabirDijagrama() {
     return 0;
 }
 
+int mqtt()
+{
+    printf("Ugradbeni sistemi\r\n");
+    printf("Demonstracija korištenja MQTT protokola\r\n\r\n");
+
+    NetworkInterface *network;
+    network = NetworkInterface::get_default_instance();
+    
+    if (!network) {
+        return -1;
+    }
+
+    MQTTNetwork mqttNetwork(network);
+
+    MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
+
+    const char* hostname = "broker.hivemq.com";
+    int port = 1883;
+    printf("Connecting to %s:%d\r\n", hostname, port);
+    int rc = mqttNetwork.connect(hostname, port);
+    if (rc != 0)
+        printf("rc from TCP connect is %d\r\n", rc);
+
+    MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+    data.MQTTVersion = 3;
+    data.clientID.cstring = "ugradbeni";
+    data.username.cstring = "";
+    data.password.cstring = "";
+    if ((rc = client.connect(data)) != 0)
+        printf("rc from MQTT connect is %d\r\n", rc);
+
+    MQTT::Message message;
+
+    // QoS 0
+    char buf[100];
+    while(1) {
+            //koeficijenti brojnika
+            for(int i = 0; i < StepenBrojnika; i++)
+                sprintf(buf, "%.2f, ", nizNula[i]);
+            message.qos = MQTT::QOS0;
+            message.retained = false;
+            message.dup = false;
+            message.payload = (void*)buf;
+            message.payloadlen = strlen(buf);
+            rc = client.publish(TEMAPUBBROJNIK, message);
+            //koeficijenti nazivnika
+            for(int i = 0; i < StepenNazivnika; i++)
+                sprintf(buf, "%.2f, ", nizPolova[i]);
+            message.qos = MQTT::QOS0;
+            message.retained = false;
+            message.dup = false;
+            message.payload = (void*)buf;
+            message.payloadlen = strlen(buf);
+            rc = client.publish(TEMAPUBNAZIVNIK, message);
+        }
+        
+     wait(1);
+}
+
  int main()
  {
      BSP_LCD_Init();
@@ -494,5 +553,6 @@ int OdabirDijagrama() {
      for(int i = 0; i < StepenNazivnika; i++)
         printf("%.1f\n", nizPolova[i]);
     printf("\n\n\n\n\n\n\n\n\n");
+    int r = mqtt();
      wait(1);
  }
