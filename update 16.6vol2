@@ -229,10 +229,17 @@ std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vrac
                 if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240) //unos -
                 {   
                     BSP_LCD_SetFont(&Font12);
-                    BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);//ispisi minus na displej
+                    if(predznak == 1)
+                    {
+                        predznak = -1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);
+                    }
+                    else
+                    {
+                        predznak = 1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)" ", LEFT_MODE);
+                    }
                     
-                    predznak = -1;
-                    i--;
                 }
                     
                 else
