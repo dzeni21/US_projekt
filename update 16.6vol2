@@ -8,6 +8,11 @@
  #include "MQTTClient.h"
  #include <string.h>
 
+
+ #define TEMAPUBBROJNIK "ugradbeni/brojnik"
+ #define TEMAPUBNAZIVNIK "ugradbeni/nazivnik"
+ #define TEMAPUBGRAF "ugradbeni/brojGrafa"
+
  #define MQTTCLIENT_QOS2 0
  
 int arrivedcount = 0;
