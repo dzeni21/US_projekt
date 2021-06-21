@@ -123,7 +123,7 @@ int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivni
      BSP_LCD_FillRect(5,215,25,25);
      BSP_LCD_DisplayStringAt(11,217, (uint8_t *)"-", LEFT_MODE);
      BSP_LCD_FillRect(35,215,200,20);
-     BSP_LCD_DisplayStringAt(30,217, (uint8_t *)"SPACE", CENTER_MODE);
+     BSP_LCD_DisplayStringAt(22,217, (uint8_t *)"NEXT", CENTER_MODE);
      BSP_LCD_FillRect(155,155,80,25);
      BSP_LCD_DisplayStringAt(167,160, (uint8_t *)"ENTER", LEFT_MODE);
      BSP_LCD_FillRect(155,185,80,25);
@@ -161,6 +161,7 @@ int StepenBrojnikaIliNazivnika(bool T) {//Stepen polinoma u brojniku ili nazivni
          if(y1 >= 155 && y1 <= 180) return 10; //ENTER je 10
          if(y1 >= 185 && y1 <= 210) return 11; //BRISI je 11
      }
+     if(x1 >= 35 && y1 >= 215) return 12; //NEXT je 12
      return broj;
  }
  
@@ -390,6 +391,69 @@ void IspisiPrenosnuFunkciju() {
      
 } 
 
+int OdabirDijagrama() {
+     BSP_LCD_Clear(LCD_COLOR_WHITE);
+     BSP_LCD_SetTextColor(6591981);
+     BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 40);
+     BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+     BSP_LCD_SetBackColor(6591981);
+     BSP_LCD_SetFont(&Font16);
+     BSP_LCD_DisplayStringAt(0, 8, (uint8_t *)"Odaberite dijagram", LEFT_MODE);
+     BSP_LCD_DisplayStringAt(0, 23, (uint8_t *)"za prikaz: ", LEFT_MODE);
+     crtajTastaturu();
+     
+     int odabir = 0; 
+     
+     
+     BSP_LCD_DrawRect(80, 45, 80, 30);
+     BSP_LCD_DrawRect(80, 80, 80, 30);
+     BSP_LCD_DrawRect(80, 115, 80, 30);
+     
+     BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+     BSP_LCD_DisplayStringAt(83, 55, (uint8_t *)"Nyquist", LEFT_MODE);
+     BSP_LCD_DisplayStringAt(98, 90, (uint8_t *)"Bode", LEFT_MODE);
+     BSP_LCD_DisplayStringAt(95, 117, (uint8_t *)"step", LEFT_MODE);
+     BSP_LCD_DisplayStringAt(91, 129, (uint8_t *)"odziv", LEFT_MODE);
+     BSP_LCD_SetFont(&Font12);
+    
+     BSP_TS_GetState(&TS_State);
+     
+     while(1) {
+         if(odabir == 0) {
+             BSP_LCD_DisplayStringAt(40, 123, (uint8_t *) "    ", LEFT_MODE);
+             BSP_LCD_DisplayStringAt(40, 55, (uint8_t *) "--->", LEFT_MODE);
+         }
+         if(odabir == 1) {
+             BSP_LCD_DisplayStringAt(40, 55, (uint8_t *) "    ", LEFT_MODE);
+             BSP_LCD_DisplayStringAt(40, 90, (uint8_t *) "--->", LEFT_MODE);
+         }
+         if(odabir == 2) {
+             BSP_LCD_DisplayStringAt(40, 90, (uint8_t *) "    ", LEFT_MODE);
+             BSP_LCD_DisplayStringAt(40, 123, (uint8_t *) "--->", LEFT_MODE);
+         }
+          BSP_TS_GetState(&TS_State);
+          if(TS_State.touchDetected) {
+            uint16_t x1 = TS_State.touchX[0];
+            wait_ms(200);
+            uint16_t y1 = TS_State.touchY[0];
+            
+            if(dajCifru(x1, y1) == 10) return odabir;
+            
+
+            if(dajCifru(x1, y1) == 12) {
+                if(odabir == 2) odabir = 0;
+                else odabir++;
+             }
+            
+         }
+        
+         wait_ms(200);
+     }
+     BSP_LCD_DisplayStringAt(40, 55, (uint8_t *) "--->", LEFT_MODE);
+     BSP_LCD_DisplayStringAt(170, 55, (uint8_t *) "<---", LEFT_MODE);
+    return 0;
+}
+
  int main()
  {
      BSP_LCD_Init();
@@ -407,7 +471,23 @@ void IspisiPrenosnuFunkciju() {
      ispisPoloviTekst();
      nizPolova = koeficijenti(1);
      IspisiPrenosnuFunkciju();
-     printf("Koeficijenti brojnika: \n");
+     while(1) { //Cekaj dok korisnik ne pritisne ENTER. 
+         
+         BSP_TS_GetState(&TS_State);
+         if(TS_State.touchDetected) {
+            uint16_t x1 = TS_State.touchX[0];
+            wait_ms(50);
+            uint16_t y1 = TS_State.touchY[0];
+            
+            if(dajCifru(x1, y1) == 10) break;
+            
+         }
+         wait_ms(25);
+     }
+     //OVDJE CE DOCI JEDNA PETLJA KOJA CE SE STALNO VRTITI I OMOGUCITI DA SE ODABERE PONOVO
+     //JOS JEDAN DIJAGRAM
+     int a = OdabirDijagrama();
+     printf("Odabran je: %d \n", a);
      for(int i = 0; i < StepenBrojnika; i++)
         printf("%.1f\n", nizNula[i]);
      printf("Koeficijenti nazivnika: \n");
