@@ -246,11 +246,17 @@ std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vrac
                 wait_ms(200);
                 if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240) //unos -
                 {   
-                    BSP_LCD_SetFont(&Font12);
-                    BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);//ispisi minus na displej
-                    
-                    predznak = -1;
-                    i--;
+                   BSP_LCD_SetFont(&Font12);
+                    if(predznak == 1)
+                    {
+                        predznak = -1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);
+                    }
+                    else
+                    {
+                        predznak = 1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)" ", LEFT_MODE);
+                    }
                 }
                     
                 else
@@ -451,7 +457,7 @@ int OdabirDijagrama() {
           BSP_TS_GetState(&TS_State);
           if(TS_State.touchDetected) {
             uint16_t x1 = TS_State.touchX[0];
-            wait_ms(200);
+            wait_ms(100);
             uint16_t y1 = TS_State.touchY[0];
             
             if(dajCifru(x1, y1) == 10) return odabir;
