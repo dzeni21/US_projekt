@@ -3,6 +3,24 @@
  #include "stm32f413h_discovery_lcd.h"
  #include <vector>
  
+#define TEMAPUBBROJNIK "ugradbeni/brojnik"
+#define TEMAPUBNAZIVNIK "ugradbeni/nazivnik"
+#define TEMAPUBGRAF "ugradbeni/brojGrafa"
+
+
+#define MQTTCLIENT_QOS2 0
+
+#include "easy-connect.h"
+#include "MQTTNetwork.h"
+#include "MQTTmbed.h"
+#include "MQTTClient.h"
+#include <string.h>
+
+int arrivedcount = 0;
+
+
+char* str;
+ 
  TS_StateTypeDef TS_State = { 0 };
  std::vector<double> nizNula, nizPolova;
  int StepenBrojnika, StepenNazivnika;
@@ -185,11 +203,11 @@ void brisiCifru(int x, int y)
 {
     int a = 78;
     if(x == 85 && y == 103)
-        BSP_LCD_DisplayStringAt(a + 7, 104, (uint8_t *)"-", LEFT_MODE);
+        BSP_LCD_DisplayStringAt(a + 8, 104, (uint8_t *)"-", LEFT_MODE);
     else if(x == 109 && y == 103)
-        BSP_LCD_DisplayStringAt(a + 31, 104, (uint8_t *)"-", LEFT_MODE);
+        BSP_LCD_DisplayStringAt(a + 32, 104, (uint8_t *)"-", LEFT_MODE);
     else 
-        BSP_LCD_DisplayStringAt(a + 60, 104, (uint8_t *)"-", LEFT_MODE);
+        BSP_LCD_DisplayStringAt(a + 61, 104, (uint8_t *)"-", LEFT_MODE);
 }
 
 std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vraca niz sa koeficijentima
@@ -229,10 +247,17 @@ std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vrac
                 if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240) //unos -
                 {   
                     BSP_LCD_SetFont(&Font12);
-                    BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);//ispisi minus na displej
+                    if(predznak == 1)
+                    {
+                        predznak = -1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);
+                    }
+                    else
+                    {
+                        predznak = 1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)" ", LEFT_MODE);
+                    }
                     
-                    predznak = -1;
-                    i--;
                 }
                     
                 else
@@ -390,6 +415,66 @@ void IspisiPrenosnuFunkciju() {
      
 } 
 
+int mqtt()
+{
+    printf("Ugradbeni sistemi\r\n");
+    printf("Demonstracija korištenja MQTT protokola\r\n\r\n");
+
+    NetworkInterface *network;
+    network = NetworkInterface::get_default_instance();
+    
+    if (!network) {
+        return -1;
+    }
+
+    MQTTNetwork mqttNetwork(network);
+
+    MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
+
+    const char* hostname = "broker.hivemq.com";
+    int port = 1883;
+    printf("Connecting to %s:%d\r\n", hostname, port);
+    int rc = mqttNetwork.connect(hostname, port);
+    if (rc != 0)
+        printf("rc from TCP connect is %d\r\n", rc);
+
+    MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
+    data.MQTTVersion = 3;
+    data.clientID.cstring = "ugradbeni";
+    data.username.cstring = "";
+    data.password.cstring = "";
+    if ((rc = client.connect(data)) != 0)
+        printf("rc from MQTT connect is %d\r\n", rc);
+
+    MQTT::Message message;
+
+    // QoS 0
+    char buf[100];
+    while(1) {
+            //koeficijenti brojnika
+            for(int i = 0; i < StepenBrojnika; i++)
+                sprintf(buf, "%.2f, ", nizNula[i]);
+            message.qos = MQTT::QOS0;
+            message.retained = false;
+            message.dup = false;
+            message.payload = (void*)buf;
+            message.payloadlen = strlen(buf);
+            rc = client.publish(TEMAPUBBROJNIK, message);
+            //koeficijenti nazivnika
+            for(int i = 0; i < StepenNazivnika; i++)
+                sprintf(buf, "%.2f, ", nizPolova[i]);
+            message.qos = MQTT::QOS0;
+            message.retained = false;
+            message.dup = false;
+            message.payload = (void*)buf;
+            message.payloadlen = strlen(buf);
+            rc = client.publish(TEMAPUBNAZIVNIK, message);
+        }
+        
+     wait(1);
+}
+
+
  int main()
  {
      BSP_LCD_Init();
@@ -413,6 +498,7 @@ void IspisiPrenosnuFunkciju() {
      printf("Koeficijenti nazivnika: \n");
      for(int i = 0; i < StepenNazivnika; i++)
         printf("%.1f\n", nizPolova[i]);
+     int r = mqtt();
     printf("\n\n\n\n\n\n\n\n\n");
      wait(1);
  }
