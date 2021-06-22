@@ -6,12 +6,15 @@
  #include "MQTTNetwork.h"
  #include "MQTTmbed.h"
  #include "MQTTClient.h"
- #include <string.h>
-
+ #include <string>
+ #include <algorithm>
+// #include <iterator>
+ #include <sstream>
 
  #define TEMAPUBBROJNIK "ugradbeni/brojnik"
  #define TEMAPUBNAZIVNIK "ugradbeni/nazivnik"
  #define TEMAPUBGRAF "ugradbeni/brojGrafa"
+ #define TEMAPUBTEST "ugradbeni/test"
 
  #define MQTTCLIENT_QOS2 0
  
@@ -246,11 +249,17 @@ std::vector<double> koeficijenti(int T) //funkcija za unos koeficijenata -> vrac
                 wait_ms(200);
                 if(x1 >= 5 && x1 <= 30 && y1 >= 215 && y1 <= 240) //unos -
                 {   
-                    BSP_LCD_SetFont(&Font12);
-                    BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);//ispisi minus na displej
-                    
-                    predznak = -1;
-                    i--;
+                   BSP_LCD_SetFont(&Font12);
+                    if(predznak == 1)
+                    {
+                        predznak = -1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)"-", LEFT_MODE);
+                    }
+                    else
+                    {
+                        predznak = 1;
+                        BSP_LCD_DisplayStringAt(70, 105, (uint8_t *)" ", LEFT_MODE);
+                    }
                 }
                     
                 else
@@ -451,7 +460,7 @@ int OdabirDijagrama() {
           BSP_TS_GetState(&TS_State);
           if(TS_State.touchDetected) {
             uint16_t x1 = TS_State.touchX[0];
-            wait_ms(200);
+            wait_ms(100);
             uint16_t y1 = TS_State.touchY[0];
             
             if(dajCifru(x1, y1) == 10) return odabir;
@@ -503,31 +512,45 @@ int mqtt()
         printf("rc from MQTT connect is %d\r\n", rc);
 
     MQTT::Message message;
-
-    // QoS 0
-    char buf[100];
-    while(1) {
+            
             //koeficijenti brojnika
-            for(int i = 0; i < StepenBrojnika; i++)
-                sprintf(buf, "%.2f, ", nizNula[i]);
-            message.qos = MQTT::QOS0;
-            message.retained = false;
-            message.dup = false;
-            message.payload = (void*)buf;
-            message.payloadlen = strlen(buf);
-            rc = client.publish(TEMAPUBBROJNIK, message);
+            std::ostringstream vts;
+            char char_array[60], char_array1[60];
+  
+             if (!nizNula.empty())
+            {
+                std::copy(nizNula.begin(), nizNula.end()-1,
+                std::ostream_iterator<double>(vts, ","));
+                vts << nizNula.back();
+                std::string stringNula = vts.str();
+                int n = stringNula.length();
+                strcpy(char_array, stringNula.c_str());
+                message.qos = MQTT::QOS0;
+                message.retained = false;
+                message.dup = false;
+                message.payload = (void*)char_array;
+                message.payloadlen = strlen(char_array);
+                rc = client.publish(TEMAPUBBROJNIK, message);
+            }
             //koeficijenti nazivnika
-            for(int i = 0; i < StepenNazivnika; i++)
-                sprintf(buf, "%.2f, ", nizPolova[i]);
-            message.qos = MQTT::QOS0;
-            message.retained = false;
-            message.dup = false;
-            message.payload = (void*)buf;
-            message.payloadlen = strlen(buf);
-            rc = client.publish(TEMAPUBNAZIVNIK, message);
-        }
-        
-     wait(1);
+            std::ostringstream vts1;
+  
+             if (!nizPolova.empty())
+            {
+                std::copy(nizPolova.begin(), nizPolova.end()-1,
+                std::ostream_iterator<double>(vts1, ","));
+                vts1 << nizPolova.back();
+                std::string stringPolova= vts1.str();
+                int n1 = stringPolova.length();
+                strcpy(char_array1, stringPolova.c_str());
+                message.qos = MQTT::QOS0;
+                message.retained = false;
+                message.dup = false;
+                message.payload = (void*)char_array1;
+                message.payloadlen = strlen(char_array1);
+                rc = client.publish(TEMAPUBNAZIVNIK, message);
+            }
+            //odabir grafa
 }
 
  int main()
